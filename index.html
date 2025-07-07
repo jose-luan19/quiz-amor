@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Quiz do Amor 💘</title>
+      <style>
+            body {
+                  font-family: sans-serif;
+                  background: #ffe6f0;
+                  color: #333;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  min-height: 100vh;
+                  margin: 0;
+                  padding: 20px;
+                  text-align: center;
+                  background-image: url(image.jpg);
+                  background-size: 180px;
+                  background-repeat: round;
+            }
+
+            .quiz-container {
+                  background: white;
+                  padding: 30px;
+                  border-radius: 20px;
+                  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                  max-width: 500px;
+                  width: 100%;
+            }
+
+            h2 {
+                  margin-bottom: 20px;
+            }
+
+            .options {
+                  display: flex;
+                  flex-direction: column;
+                  gap: 15px;
+                  margin-bottom: 20px;
+            }
+
+            .option {
+                  padding: 12px 20px;
+                  border: 2px solid #ff80ab;
+                  border-radius: 10px;
+                  cursor: pointer;
+                  transition: 0.2s;
+                  background: #fff;
+            }
+
+            .option.selected {
+                  background: #ffb3c6;
+                  color: white;
+                  border-color: #ff4d6d;
+            }
+
+            button {
+                  padding: 12px 24px;
+                  background: #ff4d6d;
+                  color: white;
+                  border: none;
+                  border-radius: 8px;
+                  cursor: pointer;
+                  font-size: 16px;
+            }
+
+            /* Toast central */
+            .toast {
+                  position: fixed;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  background-color: rgba(0, 0, 0, 0.9);
+                  color: white;
+                  padding: 20px 30px;
+                  border-radius: 12px;
+                  font-size: 18px;
+                  z-index: 9999;
+                  opacity: 0;
+                  pointer-events: none;
+                  transition: opacity 0.3s ease;
+            }
+
+            .toast.show {
+                  opacity: 1;
+                  pointer-events: auto;
+            }
+
+            .blink {
+                  animation: piscar 1s infinite;
+            }
+
+            @keyframes piscar {
+                  0% {
+                        opacity: 1;
+                  }
+
+                  50% {
+                        opacity: 0.3;
+                  }
+
+                  100% {
+                        opacity: 1;
+                  }
+            }
+      </style>
+</head>
+
+<body>
+
+      <div class="quiz-container">
+            <h2 id="question">Carregando pergunta...</h2>
+            <div class="options" id="options"></div>
+            <button id="confirmBtn" onclick="confirmar()">Confirmar resposta</button>
+      </div>
+
+      <!-- Toast -->
+      <div id="toast" class="toast"></div>
+
+      <script>
+            const perguntas = [
+                  {
+                        pergunta: "Qual foi o primeiro filme que assistimos?",
+                        alternativas: ["Your Name", "Viagem de Chihiro", "Minecraft", "Ratatouille"],
+                        correta: "Your Name",
+                        acerto: "Memória boa hein, amor! 🎬💖",
+                        erro: "Mesmo errando, a você tem o melhor gosto, você que indicou! 💗"
+                  },
+                  {
+                        pergunta: "Qual foi o primeiro bombom que lhe ofereci?",
+                        alternativas: ["Sonho de valsa", "Cacau Show", "Halls", "Trident"],
+                        correta: "Halls",
+                        acerto: "Até julgou o meu gosto mas ainda aceitou no culto de doutrina",
+                        erro: "Vou te dar ainda mais a ponto que se perca ainda mais!"
+                  },
+                  {
+                        pergunta: "Onde foi nosso primeiro encontro a sós?",
+                        alternativas: ["Cinema", "Geek Burguer"],
+                        correta: "Cinema",
+                        acerto: "O dia que você segurou minha mão e me trouxe para perto e não quero mais sair!💗",
+                        erro: "Até errando, você fica linda com esse sorriso e supera qualquer coisa."
+                  }, 
+                  {
+                        pergunta: "Onde foi nosso primeiro beijo?",
+                        alternativas: ["Entrada do condominio", "Porta da sua casa", "1º andar de escada", "No carro(Volta Yaris🥹)"],
+                        correta: "1º andar de escada",
+                        acerto: "A noite do meu primeiro beijo e da certeza que você é a mulher certa pra mim!",
+                        erro: "Errou? Então vou ter que te lembrar como foi 😘"
+                  },
+                  {
+                        pergunta: "Qual o nosso destino de lua de mel?",
+                        alternativas: ["Paris", "Salvador", "Paraty", "Rio de Janeiro"],
+                        correta: "Paraty",
+                        acerto: "Nossa lua de mel será linda!",
+                        erro: "Vou para onde você quiser, te seguirei até a lua."
+                  },
+                  {
+                        pergunta: "Como eu me sinto ao seu lado?",
+                        alternativas: ["Feliz", "Amado", "Confiante", "Todas as anteriores"],
+                        correta: "Todas as anteriores",
+                        acerto: "Você me faz sentir amado, feliz e confiante todos os dias! 💖",
+                        erro: "Todas as respostas são verdadeiras, você me faz sentir tudo isso e muito mais!"
+                  },
+            ];
+
+            let indice = 0;
+            let selecionada = null;
+            let estado = "responder";
+
+            const questionEl = document.getElementById("question");
+            const optionsEl = document.getElementById("options");
+            const confirmBtn = document.getElementById("confirmBtn");
+            const toast = document.getElementById("toast");
+
+            function carregarPergunta() {
+                  document.querySelectorAll(".option").forEach(option => {
+                        option.classList.remove("blink", "selected");
+                  });
+                  const atual = perguntas[indice];
+                  questionEl.textContent = atual.pergunta;
+                  optionsEl.innerHTML = "";
+                  confirmBtn.textContent = "Confirmar resposta";
+                  estado = "responder";
+                  selecionada = null;
+
+                  atual.alternativas.forEach(alt => {
+                        const div = document.createElement("div");
+                        div.className = "option";
+                        div.textContent = alt;
+                        div.onclick = () => selecionar(div);
+                        optionsEl.appendChild(div);
+                  });
+            }
+
+            function selecionar(elemento) {
+                  document.querySelectorAll(".option").forEach(el => el.classList.remove("selected"));
+                  elemento.classList.add("selected");
+                  selecionada = elemento.textContent;
+            }
+
+            function mostrarToast(mensagem, cor, tempo=5000) {
+                  toast.textContent = mensagem;
+                  toast.style.backgroundColor = cor;
+                  toast.classList.add("show");
+
+                  setTimeout(() => {
+                        toast.classList.remove("show");
+                  }, tempo);
+            }
+
+            function confirmar() {
+                  if (estado === "responder") {
+                        if (!selecionada) {
+                              alert("Escolha uma opção primeiro!");
+                              return;
+                        }
+
+                        const atual = perguntas[indice];
+                        const acerto = selecionada === atual.correta;
+                        const mensagem = acerto ? atual.acerto : atual.erro;
+                        const cor = acerto ? "rgba(0, 128, 0, 0.9)" : "#ff4d6d";
+                        mostrarToast(mensagem, cor);
+                        // piscar a alternativa correta
+                        document.querySelectorAll(".option").forEach(option => {
+                              if (option.textContent === atual.correta) {
+                                    option.classList.add("blink");
+                              }
+                        });
+
+                        confirmBtn.textContent = "Próxima pergunta";
+                        estado = "proxima";
+                  } else {
+                        indice++;
+                        if (indice < perguntas.length) {
+                              carregarPergunta();
+                        } else {
+                              questionEl.textContent = "Ainda iremos escrever muita historia para relembrar depois! 💖";
+                              optionsEl.innerHTML = "";
+                              confirmBtn.style.display = "none";
+
+                              mostrarToast("Você é perfeita e me faz feliz todos os dias! 💕", "#ff4d6d", 15000);
+                        }
+                  }
+            }
+
+            carregarPergunta();
+      </script>
+</body>
+
+</html>
